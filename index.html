@@ -256,7 +256,8 @@
         recentList.innerHTML = "";
         searchList.innerHTML = "";
         searchInput.value = "";
-        setActiveButton(null); // Remove all highlights
+        document.getElementById('days-input').value = ""; // 👈 बस ये लाइन जोड़नी है
+        setActiveButton(null); 
     }
 
     async function fetchDataFromServer(quiet = false) {
