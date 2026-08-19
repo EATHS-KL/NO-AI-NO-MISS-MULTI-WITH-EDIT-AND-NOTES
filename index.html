@@ -1,1 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Lead Tracker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px 15px; color: #333; }
+        .container { max-width: 420px; margin: 0 auto; background: #ffffff; padding: 25px 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h2 { color: #1e293b; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+        
+        .user-profile { background: #eff6ff; border: 1px dashed #93c5fd; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .user-profile input { flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 600; color: #1d4ed8; font-family: inherit; outline: none; }
+        
+        #text-output { width: 100%; height: 120px; padding: 15px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 16px; font-family: inherit; box-sizing: border-box; resize: none; background-color: #f8fafc; transition: all 0.3s ease; line-height: 1.5; }
+        
+        .live-validator { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .live-badge { font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; transition: 0.3s; }
+        .badge-invalid { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .badge-valid { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+
+        .primary-btn { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 10px; width: 100%; padding: 16px; font-size: 16px; cursor: pointer; margin-top: 15px; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; }
+        .primary-btn:active { transform: translateY(2px); }
+        .primary-btn:disabled { background: #cbd5e1; cursor: not-allowed; color: #64748b; }
+
+        .dashboard-section { margin-top: 30px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .section-title { margin: 0 0 15px 0; color: #334155; font-size: 16px; font-weight: 600; }
+        #status-msg { font-size: 13px; color: #475569; background: #e2e8f0; padding: 8px 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: 500; }
+
+        .chip-container { display: flex; gap: 8px; margin-bottom: 12px; }
+        .chip-btn { flex: 1; background: #e0e7ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 10px 5px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .recent-btn { background: #fce7f3; color: #db2777; border-color: #fbcfe8; width: 100%; margin-bottom: 12px; }
+        
+        .filter-container { display: flex; gap: 10px; }
+        .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 0; box-sizing: border-box; }
+        #days-input { width: 35%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; text-align: center; }
+        .action-btn { width: 65%; background: #0f172a; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
+
+        .divider { border-top: 1px dashed #cbd5e1; margin: 25px 0; }
+
+        /* Card Styles */
+        #upcoming-list { margin-top: 20px; }
+        .task-card { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: left; position: relative; }
+        .task-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .task-name { font-weight: 600; color: #1e293b; font-size: 15px; }
+        .task-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .task-date { background: #eff6ff; color: #2563eb; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+        .status-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-top: 4px; background: #f1f5f9; color: #475569; }
+        .task-req { color: #475569; font-size: 14px; line-height: 1.4; border-top: 1px dashed #e2e8f0; padding-top: 8px; margin-top: 8px; }
+        .summary-badge { background: #dcfce7; color: #166534; padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; margin-bottom: 15px; text-align: center; }
+
+        /* Edit Button on Card */
+        .edit-btn { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 8px; display: inline-block; }
+
+        /* Edit Modal (Popup) CSS */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-box { background: white; width: 90%; max-width: 380px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-header h3 { margin: 0; font-size: 18px; color: #1e293b; }
+        .close-modal { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+        
+        .input-group { margin-bottom: 12px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 4px; }
+        .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: #3b82f6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Smart Lead Tracker</h2>
+    </div>
+
+    <div class="user-profile">
+        <div class="user-icon">👤</div>
+        <input type="text" id="salesman-name" placeholder="Enter Your Name (e.g. Rahul)" oninput="saveName()">
+    </div>
+
+    <textarea id="text-output" placeholder="Format: Name, Place, Requirement, Budget, Date&#10;Ex: Sandeep, Surat, Kurti & Saree, 45000, 25/09/2026"></textarea>
+    
+    <div class="live-validator" id="live-validator">
+        <div class="live-badge badge-invalid" id="badge-name">❌ Name</div>
+        <div class="live-badge badge-invalid" id="badge-place">❌ Place</div>
+        <div class="live-badge badge-invalid" id="badge-req">❌ Req.</div>
+        <div class="live-badge badge-invalid" id="badge-budget">❌ Budget</div>
+        <div class="live-badge badge-invalid" id="badge-date">❌ Date</div>
+    </div>
+
+    <button id="save-btn" class="primary-btn" disabled>Fill all 5 parts to Save 🔒</button>
+
+    <div class="dashboard-section">
+        <div id="status-msg">System Ready 🟢</div>
+        
+        <h4 class="section-title">🗓️ Date Filters</h4>
+        <div class="chip-container">
+            <button class="chip-btn" onclick="fetchLeads('week')">This Week</button>
+            <button class="chip-btn" onclick="fetchLeads('month')">This Month</button>
+        </div>
+
+        <div class="filter-container">
+            <input type="number" id="days-input" placeholder="Custom Days" min="1">
+            <button class="action-btn" onclick="fetchCustomLeads()">Filter by Days</button>
+        </div>
+        
+        <div class="divider"></div>
+
+        <h4 class="section-title">🔍 Search & Verify</h4>
+        <button class="chip-btn recent-btn" onclick="fetchRecentSaves()">Check Recent Saves 🕒</button>
+
+        <div class="filter-container">
+            <input type="text" id="search-input" class="search-box" style="width: 65%;" placeholder="Search name/place...">
+            <button class="action-btn" style="width: 35%;" onclick="searchCustomer()">Search</button>
+        </div>
+        
+        <div id="upcoming-list"></div>
+    </div>
+</div>
+
+<!-- 🔴 Edit Modal (Popup) 🔴 -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="edit-modal-title">Edit Entry</h3>
+            <button class="close-modal" onclick="closeModal()">✖</button>
+        </div>
+        
+        <input type="hidden" id="edit-row-index">
+        
+        <div class="input-group">
+            <label>Customer Status</label>
+            <select id="edit-status">
+                <option value="Follow-up">Follow-up 🔄</option>
+                <option value="Closed">Closed / Deal Done ✅</option>
+                <option value="Not Interested">Not Interested ❌</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label>Follow-up Date</label>
+            <input type="text" id="edit-date" placeholder="DD/MM/YYYY">
+        </div>
+
+        <div class="input-group">
+            <label>Requirements</label>
+            <input type="text" id="edit-req">
+        </div>
+
+        <div class="input-group">
+            <label>Budget (₹)</label>
+            <input type="text" id="edit-budget">
+        </div>
+
+        <button id="update-btn" class="primary-btn" style="padding: 12px; margin-top: 5px;" onclick="submitUpdate()">Update Entry ✅</button>
+    </div>
+</div>
+
+<script>
+    // 👇 YOUR WEB APP URL GOES HERE 👇
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxH6Q3YTM-v7AmqhYe0BQn4zK-vD_-jIyl252KVTRj6BiuwsBkQ9HFmcXgC7URCyddd/exec'; 
+
+    const saveBtn = document.getElementById('save-btn');
+    const textOutput = document.getElementById('text-output');
+    const statusMsg = document.getElementById('status-msg');
+    const upcomingList = document.getElementById('upcoming-list');
+    const daysInput = document.getElementById('days-input');
+    const searchInput = document.getElementById('search-input');
+    const salesmanInput = document.getElementById('salesman-name');
+
+    window.onload = () => {
+        const savedName = localStorage.getItem('salesman_name');
+        if (savedName) salesmanInput.value = savedName;
+    };
+
+    function saveName() { localStorage.setItem('salesman_name', salesmanInput.value.trim()); }
+
+    function getSalesmanName() {
+        const name = salesmanInput.value.trim();
+        return name === "" ? "Unknown Salesman" : name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    }
+
+    let parsedDataStore = {}; 
+
+    textOutput.addEventListener('input', () => {
+        const text = textOutput.value;
+        const parts = text.split(',');
+
+        const name = parts[0] ? parts[0].trim() : "";
+        const place = parts[1] ? parts[1].trim() : "";
+        const req = parts[2] ? parts[2].trim() : "";
+        const budget = parts[3] ? parts[3].trim() : "";
+        const date = parts[4] ? parts[4].trim() : "";
+
+        updateBadge('badge-name', name, 'Name');
+        updateBadge('badge-place', place, 'Place');
+        updateBadge('badge-req', req, 'Req.');
+        updateBadge('badge-budget', budget, 'Budget');
+        updateBadge('badge-date', date, 'Date');
+
+        if (name && place && req && budget && date) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = "Save Entry 💾";
+            parsedDataStore = { name, place, req, budget, date };
+        } else {
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Fill all 5 parts to Save 🔒";
+        }
+    });
+
+    function updateBadge(id, value, label) {
+        const badge = document.getElementById(id);
+        if (value.length > 0) {
+            badge.className = "live-badge badge-valid";
+            badge.innerHTML = `✅ ${label}: ${value}`;
+        } else {
+            badge.className = "live-badge badge-invalid";
+            badge.innerHTML = `❌ ${label}`;
+        }
+    }
+
+    let isSubmitting = false; 
+
+    saveBtn.addEventListener('click', async () => {
+        if (isSubmitting) return; 
+        if(salesmanInput.value.trim() === "") { alert("Please enter your name at the top first!"); salesmanInput.focus(); return; }
+        
+        const currentSalesman = getSalesmanName();
+        const rawText = textOutput.value.trim();
+        
+        isSubmitting = true;
+        saveBtn.innerText = "Saving Fast... ⚡"; 
+        saveBtn.disabled = true; 
+        statusMsg.innerHTML = "Saving directly to sheet...";
+        statusMsg.style.background = "#e0f2fe"; 
+        statusMsg.style.color = "#0284c7";
+
+        try {
+            const response = await fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: "add", raw: rawText, parsed: parsedDataStore, salesman: currentSalesman }) 
+            });
+            const result = await response.json();
+            
+            if(result.status === "success") {
+                statusMsg.innerHTML = "✅ Saved instantly in " + currentSalesman + "'s sheet!";
+                statusMsg.style.background = "#dcfce7";
+                statusMsg.style.color = "#166534";
+                textOutput.value = ""; 
+                textOutput.dispatchEvent(new Event('input')); 
+                isSubmitting = false;
+            } else { throw new Error(result.message); }
+        } catch (error) {
+            statusMsg.innerHTML = "⚠️ Network Issue! Check Recent Saves.";
+            statusMsg.style.background = "#fee2e2";
+            statusMsg.style.color = "#991b1b";
+            isSubmitting = false;
+            saveBtn.innerText = "Save Entry 💾"; 
+            saveBtn.disabled = false; 
+        }
+    });
+
+    async function fetchDataForUser() {
+        const currentSalesman = getSalesmanName();
+        const url = `${WEB_APP_URL}?user=${encodeURIComponent(currentSalesman)}`;
+        const response = await fetch(url);
+        return await response.json();
+    }
+
+    // 🟢 Updated Card HTML to include Edit Button 🟢
+    function createCardHTML(item, showTimestamp = false) {
+        let placeBudgetTxt = `(${item.place !== "N/A" ? item.place : 'Unknown'} - ₹${item.budget !== "N/A" ? item.budget : '0'})`;
+        let dateDisplay = `<span class="task-date">🗓️ ${item.followUpDate}</span>`;
+        if (showTimestamp) dateDisplay = `<span class="task-date" style="background:#fce7f3; color:#db2777;">🕒 ${item.timestamp.split(',')[1] || item.timestamp}</span>`;
+        
+        let statusColor = item.status === "Closed" ? "background:#dcfce7; color:#166534;" : 
+                          item.status === "Not Interested" ? "background:#fee2e2; color:#991b1b;" : "";
+
+        // Escaping values for the onclick function to avoid syntax errors
+        const safeReq = item.req ? item.req.replace(/'/g, "\\'") : "";
+
+        return `
+            <div class="task-card">
+                <div class="task-header">
+                    <div class="task-name-group">
+                        <span class="task-name">👤 ${item.name}</span>
+                        <span class="task-meta">${placeBudgetTxt}</span>
+                        <span class="status-badge" style="${statusColor}">${item.status || 'Follow-up'}</span>
+                    </div>
+                    ${dateDisplay}
+                </div>
+                <div class="task-req">📝 ${item.req}</div>
+                <button class="edit-btn" onclick="openModal(${item.rowIndex}, '${item.name}', '${item.status || 'Follow-up'}', '${item.followUpDate}', '${safeReq}', '${item.budget}')">Edit ✏️</button>
+            </div>`;
+    }
+
+    async function fetchLeads(targetType, customDays = 0) {
+        if(salesmanInput.value.trim() === "") { alert("Please enter your name first!"); return; }
+        upcomingList.innerHTML = "<p style='text-align:center;'>Fetching... ⏳</p>"; 
+        try {
+            const data = await fetchDataForUser();
+            const today = new Date(); today.setHours(0,0,0,0);
+            let targetDate = new Date(today); let label = "";
+
+            if (targetType === 'week') {
+                let day = today.getDay(); let diff = today.getDate() + (day === 0 ? 0 : 7 - day);
+                targetDate.setDate(diff); label = "this week";
+            } else if (targetType === 'month') {
+                targetDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); label = "this month";
+            } else if (targetType === 'custom') {
+                targetDate.setDate(today.getDate() + customDays); label = `in next ${customDays} days`;
+            }
+            
+            let html = ""; let count = 0;
+            data.forEach(item => {
+                if(item.followUpDate && item.followUpDate !== "N/A" && item.followUpDate.includes("/")) {
+                    const parts = item.followUpDate.split("/");
+                    const fDate = new Date(parts[2], parts[1]-1, parts[0]); 
+                    if(fDate >= today && fDate <= targetDate) { count++; html += createCardHTML(item); }
+                }
+            });
+
+            if(html === "") html = `<div class="summary-badge" style="background:#f8fafc; color:#475569;">👍 No follow-ups for ${getSalesmanName()} ${label}!</div>`;
+            else html = `<div class="summary-badge">Found ${count} follow-up(s) ${label}</div>` + html;
+            upcomingList.innerHTML = html;
+        } catch (error) { upcomingList.innerHTML = "❌ Failed to fetch list."; }
+    }
+
+    function fetchCustomLeads() {
+        let customDays = parseInt(daysInput.value);
+        if(isNaN(customDays) || customDays <= 0) { alert("Enter valid days"); return; }
+        fetchLeads('custom', customDays);
+    }
+
+    async function fetchRecentSaves() {
+        if(salesmanInput.value.trim() === "") { alert("Please enter your name first!"); return; }
+        upcomingList.innerHTML = "<p style='text-align:center;'>Checking Sheet... ⏳</p>"; 
+        try {
+            const data = await fetchDataForUser();
+            let html = `<div class="summary-badge" style="background:#fce7f3; color:#db2777;">Latest 5 Entries for ${getSalesmanName()}</div>`;
+            const recentData = data.reverse().slice(0, 5);
+            recentData.forEach(item => { html += createCardHTML(item, true); });
+            upcomingList.innerHTML = html;
+        } catch (error) { upcomingList.innerHTML = "❌ Failed to check recent saves."; }
+    }
+
+    async function searchCustomer() {
+        if(salesmanInput.value.trim() === "") { alert("Please enter your name first!"); return; }
+        const query = searchInput.value.toLowerCase().trim();
+        if(query === "") { alert("Enter name or place to search!"); return; }
+        
+        upcomingList.innerHTML = "<p style='text-align:center;'>Searching... 🔍</p>"; 
+        try {
+            const data = await fetchDataForUser();
+            let html = ""; let count = 0;
+            data.reverse().forEach(item => {
+                const nameMatch = item.name && item.name.toLowerCase().includes(query);
+                const placeMatch = item.place && item.place.toLowerCase().includes(query);
+                const reqMatch = item.req && item.req.toLowerCase().includes(query);
+                if(nameMatch || placeMatch || reqMatch) { count++; html += createCardHTML(item); }
+            });
+
+            if(html === "") html = `<div class="summary-badge" style="background:#fee2e2; color:#991b1b;">No results found for "${query}"</div>`;
+            else html = `<div class="summary-badge">Found ${count} result(s) for "${query}"</div>` + html;
+            upcomingList.innerHTML = html;
+        } catch (error) { upcomingList.innerHTML = "❌ Search failed."; }
+    }
+
+    // --- 🔴 Modal Logic (Edit Features) 🔴 ---
+    const editModal = document.getElementById('edit-modal');
+    const updateBtn = document.getElementById('update-btn');
+
+    function openModal(rowIndex, name, status, date, req, budget) {
+        document.getElementById('edit-modal-title').innerText = "Edit: " + name;
+        document.getElementById('edit-row-index').value = rowIndex;
+        document.getElementById('edit-status').value = status;
+        document.getElementById('edit-date').value = date;
+        document.getElementById('edit-req').value = req;
+        document.getElementById('edit-budget').value = budget;
+        
+        editModal.style.display = "flex";
+    }
+
+    function closeModal() {
+        editModal.style.display = "none";
+    }
+
+    async function submitUpdate() {
+        updateBtn.innerText = "Updating... ⏳";
+        updateBtn.disabled = true;
+
+        const currentSalesman = getSalesmanName();
+        const payload = {
+            action: "edit",
+            salesman: currentSalesman,
+            rowIndex: document.getElementById('edit-row-index').value,
+            updates: {
+                status: document.getElementById('edit-status').value,
+                date: document.getElementById('edit-date').value,
+                req: document.getElementById('edit-req').value,
+                budget: document.getElementById('edit-budget').value
+            }
+        };
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            
+            if(result.status === "success") {
+                alert("✅ Updated Successfully!");
+                closeModal();
+                // रिफ्रेश करने के लिए रिसेंट सेव्स खोल देते हैं
+                fetchRecentSaves(); 
+            } else {
+                throw new Error("Update Failed");
+            }
+        } catch (error) {
+            alert("❌ Network Error while updating. Try again.");
+        } finally {
+            updateBtn.innerText = "Update Entry ✅";
+            updateBtn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
